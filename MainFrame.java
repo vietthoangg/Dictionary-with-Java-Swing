@@ -1,5 +1,6 @@
 import java.awt.*;
 import java.awt.event.*;
+import java.util.ArrayList;
 
 import javax.swing.*;
 import javax.swing.border.*;
@@ -15,7 +16,7 @@ public class MainFrame extends JFrame {
 	 */
 	private static final long serialVersionUID = 1L;
 	
-	private final static String frameName = "AV Dictionary";
+	private final static String frameName = "VAV Dictionary";
 	
 	private JPanel contentPane;
 
@@ -265,19 +266,44 @@ public class MainFrame extends JFrame {
 		
 		private static final long serialVersionUID = 1L;
 		
+		private Dictionary dict;
+		private ArrayList<String> words;
+		
 		//Create ListModel 
-		private DefaultListModel<String> newListModel(Dictionary dict) {
+		private DefaultListModel<String> createListModel() {
 			DefaultListModel<String> model = new DefaultListModel<>();
 			
 			dict.update();
 			//Add WordMap to model
-			for(String word: dict.getWordList()) {
+			for(String word: words) {
 				model.addElement(word);
 			}
 			return model;
 		}
+		
+		//Search in word in wordList to suggest user
+		//Binary search
+		private int search(String str) {
+			if(str.equals(words.get(0))) return 0; //Check the first word
+			
+			int start = 0;
+			int end = words.size();
+			while(start < end - 1) {
+				int mid = (start + end) / 2;
+				if(words.get(mid).compareToIgnoreCase(str) >= 0) {
+					end = mid;
+				} else {
+					start = mid;
+				}
+			}
+			if(end == words.size()) return -1; //Can not find the word
+			return end;
+		}
 
-		public DictionaryPanel(Dictionary dict) {			
+		public DictionaryPanel(Dictionary dict) {	
+			this.dict = dict;
+			this.words = dict.getWordList();
+			
 			//Display meaning of the word
 			JEditorPane meaningEditorPane = new JEditorPane();
 			meaningEditorPane.setContentType("text/html");
@@ -293,7 +319,7 @@ public class MainFrame extends JFrame {
 			this.add(meaningScrollPane);
 			
 			//List of words in Dictionary
-			JList<String> wordList = new JList<>(newListModel(dict));
+			JList<String> wordList = new JList<>(createListModel());
 			wordList.setBounds(10, 56, 226, 194);
 			wordList.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
 			this.setLayout(null);
@@ -322,7 +348,11 @@ public class MainFrame extends JFrame {
 			JButton addWordButton = new JButton("");
 			addWordButton.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					new AddWordFrame(dict);
+					if(meaningEditorPane.getText().contains("Not found!")) {
+						new AddWordFrame(dict, textField.getText().trim().toLowerCase());
+					} else {
+						new AddWordFrame(dict);
+					}
 				}
 			});
 			addWordButton.setBounds(469, 16, 25, 25);
@@ -363,60 +393,77 @@ public class MainFrame extends JFrame {
 			deleteWordButton.setIcon(new ImageIcon(".\\src\\icon\\trash-icon.png"));
 			this.add(deleteWordButton);
 			
-			//Event handler-----------------
-			textField.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					String typingWord = e.getActionCommand().trim().toLowerCase();
-					if(!typingWord.equals("")) {
-						String result = dict.search(typingWord);
-						if(result != null) {
-							meaningEditorPane.setText("<b>" + typingWord + "</b><br/>" + result);
-							wordList.setSelectedValue(typingWord, true);
-							wordList.requestFocus();
-						} else {
-							meaningEditorPane.setText("");
-							int addWordOption = JOptionPane.showConfirmDialog(null, "Can not find this word.\nWould you like to add to " + dict.getName() + "?", frameName, JOptionPane.YES_NO_CANCEL_OPTION);
-							if(addWordOption == JOptionPane.YES_OPTION) {
-								new AddWordFrame(dict, typingWord);
-							}
-						}
-					}
-				}
-			});
-			/*
-			textField.addCaretListener(new CaretListener() {
-				@Override
-				public void caretUpdate(CaretEvent e) {
-					String typingWord = textField.getText();
-					if(typingWord != "") { //If textField is available
-						typingWord = typingWord.toLowerCase();
-						String result = dict.search(typingWord);
-						if(result != null) {
-							meaningEditorPane.setText("<b>" + typingWord + "</b><br/>" + editMeaning( result ));
-							wordList.setSelectedValue(typingWord, true);
-						}
-						
-					}
-				}
-			});*/
+			//Event listener-----------------------------------------------------------
 			
 			wordList.addListSelectionListener(new ListSelectionListener() {
 				@Override
 				public void valueChanged(ListSelectionEvent e) {
 					String selectedWord = wordList.getSelectedValue();
-					textField.setText(selectedWord);
+					
 					String result = dict.search(selectedWord);
 					if(result != null) {
 						meaningEditorPane.setText("<b>" + selectedWord + "</b><br/>" + dict.search(selectedWord));
 					} else {
-						meaningEditorPane.setText("");
-						int addWordOption = JOptionPane.showConfirmDialog(null, "Can not find this word.\nWould you like to add to " + dict.getName() + "?", frameName, JOptionPane.YES_NO_CANCEL_OPTION);
-						if(addWordOption == JOptionPane.YES_OPTION) {
-							new AddWordFrame(dict, selectedWord);
+						meaningEditorPane.setText("<font color=\"red\">Not found!</font>");
+					}
+				}
+			});
+			
+			textField.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					String typingWord = textField.getText().trim().toLowerCase();
+					if(!typingWord.equals("")) {
+						String result = dict.search(typingWord);
+						if(result != null) {
+							wordList.setSelectedValue(typingWord, true);
+							wordList.requestFocus();
+						} else {
+							meaningEditorPane.setText("<font color=\"red\">Not found!</font>");						
 						}
 					}
 				}
-			});			
+			});
+			
+			textField.addCaretListener(new CaretListener() {
+				@Override
+				public void caretUpdate(CaretEvent e) {
+					String typingWord = textField.getText().trim().toLowerCase();
+					if(!typingWord.equals("")) { //If textField is available
+						wordList.setSelectedValue( words.get(search(typingWord)), true ); //Set list
+					} else {
+						wordList.setSelectedValue( words.get(0), true ); //Set the first word
+					}
+				}
+			});
+			
+			/*
+			 * 
+			wordList.addMouseListener(new MouseAdapter() {		
+				private String selectedWord;
+				
+				@Override
+				public void mouseClicked(MouseEvent e) {
+					selectedWord = wordList.getSelectedValue();
+					
+					String result = dict.search(selectedWord);
+					if(result != null) {
+						meaningEditorPane.setText("<b>" + selectedWord + "</b><br/>" + dict.search(selectedWord));
+					} else {
+						meaningEditorPane.setText("<font color=\"red\">Not found!</font>");
+					}
+					SwingUtilities.invokeLater(setTextField);	
+				}
+			
+				//Fix bug: IllegalStateException when setText for TextField
+				private Runnable setTextField = new Runnable() {
+					@Override
+					public void run() {
+						textField.setText(selectedWord);
+					}
+				};
+			});
+			*/
+			
 		}
 		
 	}
@@ -451,7 +498,7 @@ public class MainFrame extends JFrame {
 		}
 		
 		public void newFrame() {			
-			//setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+			
 			setVisible(true);
 			setBounds(100, 100, 450, 410);
 			contentPane = new JPanel();
@@ -559,7 +606,7 @@ public class MainFrame extends JFrame {
 					if(wordField.getText().equals("")) {
 						JOptionPane.showMessageDialog(null, "Please enter the word you want to add!", frameName, JOptionPane.ERROR_MESSAGE);
 						return;
-					} 
+					}
 					word = wordField.getText().trim().toLowerCase();
 					//Pronunciation field
 					String pron = pronunciationField.getText().trim();
@@ -625,7 +672,7 @@ public class MainFrame extends JFrame {
 		
 		public DeleteWordFrame(Dictionary dict, String word) {
 			super(frameName);
-			//setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+			
 			setBounds(100, 100, 375, 360);
 			contentPane = new JPanel();
 			contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -699,7 +746,7 @@ public class MainFrame extends JFrame {
 		
 		public ModifyWordFrame(Dictionary dict, String word) {
 			super(frameName);
-			//setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+			
 			setBounds(100, 100, 375, 360);
 			setVisible(true);
 			contentPane = new JPanel();
@@ -747,7 +794,7 @@ public class MainFrame extends JFrame {
 					int modifyOption = JOptionPane.showConfirmDialog(null, "Do you want to modify this word?");
 					if(modifyOption == JOptionPane.YES_OPTION) {
 						//Edit editorPane to get word
-						//!!!Lose all html color font :(
+						//!!!Lose all html color font 
 						String editor = Convert.toUnicode(editorPane);
 						String userWord = editor.substring(editor.indexOf("<b>"));
 						//Modify dictionary
