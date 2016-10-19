@@ -6,7 +6,7 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.text.html.HTMLDocument;
 
-//Convert text from JEditorPane to Unicode
+//Convert text from JEditorPane to UTF-8 string
 //Source: StackOverFlow
 
 public class Convert {
@@ -17,8 +17,7 @@ public class Convert {
 	    javax.swing.text.Element[] styles = doc.getRootElements();
 	    for (int i = 0; i < styles.length; i++) {
 	        int size = styles[i].getElementCount();
-	        if (!styles[i].getName().contains("bidi root")) {
-	        	//System.out.println("<" + styles[i].getName() + ">");
+	        if (!styles[i].getName().contains("bidi root")) {	        	
 	        	sb.append("<" + styles[i].getName() + ">");
 	        }
 	        for (int j = 0; j < size; j++) {
@@ -33,8 +32,7 @@ public class Convert {
 	                        for (int l = 0; l < subsubsize; l++) {
 	                            javax.swing.text.Element elem = styles[i].getElement(j).getElement(k).getElement(l);
 	                            element = elem.getName();
-	                            if (!element.contains("content")) {		
-	                            	//System.out.println("content<" + element + ">");
+	                            if (!element.contains("content")) {			                            	
 	                                sb.append("<" + element + ">");
 	                            }
 	                            if (element.equals("content")) {
@@ -42,8 +40,7 @@ public class Convert {
 	                                Enumeration<?> attrs = attributes.getAttributeNames();
 	                                while (attrs.hasMoreElements()) {
 	                                    String rft = attrs.nextElement().toString();
-	                                    if (rft.equals("b")) {			
-	                                    	//System.out.println("b<" + rft + ">");
+	                                    if (rft.equals("b")) {				                                    	
 	                                        sb.append("<" + rft + ">");
 	                                        cond = "passb";
 	                                    } else if (rft.equals("i")) {
@@ -53,15 +50,12 @@ public class Convert {
 	                                }
 	                            }
 	                            try {				   
-	                            	//System.out.println( "ele:" + elem.getDocument().getText(elem.getStartOffset(), (elem.getEndOffset() - elem.getStartOffset())));
 	                                sb.append(elem.getDocument().getText(elem.getStartOffset(), (elem.getEndOffset() - elem.getStartOffset())));
 	                            } catch (BadLocationException e) {}
 	                            if (cond.equals("passi")) {				                                
-	                            	//System.out.println( "bi:" + boldi );
 	                            	sb.append(italic);
 	                            }
-	                            if (cond.equals("passb")) {		
-	                            	//System.out.println( "bb" + boldc );
+	                            if (cond.equals("passb")) {                            	
 	                                sb.append(bold);
 	                            }
 	                            cond = "fail";
@@ -71,7 +65,6 @@ public class Convert {
 	            }
 	        }
 	    }
-	    //System.out.println(sb.toString());
 	    return sb.toString();
 	}
 

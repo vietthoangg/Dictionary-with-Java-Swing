@@ -11,11 +11,11 @@ import java.util.HashMap;
 
 public class Dictionary {
 	
-	private String name; //Name of this dictionary
-	private String filePath; //file path of dictionary data
-	private HashMap<String, String> data = new HashMap<>();
-	private ArrayList<String> words = new ArrayList<>();
-	private boolean isModified = false; //Check if the dictionary is modified
+	private String name;                                    //Name of this dictionary
+	private String filePath;                                //File path of dictionary data
+	private HashMap<String, String> data = new HashMap<>(); //Store dictionary data
+	private ArrayList<String> wordList = new ArrayList<>(); //Store words to search
+	private boolean isModified = false;                     //Check if the dictionary is modified
 	
 	public Dictionary() {}
 	
@@ -31,15 +31,15 @@ public class Dictionary {
 	}
 	
 	//Return number of words in dictionary
-	public int size() { return words.size(); }
+	public int size() { return wordList.size(); }
 	
 	//Check if dictionary is empty
-	public boolean isEmpty() { return words.isEmpty(); }
+	public boolean isEmpty() { return wordList.isEmpty(); }
 	
 	//Add new word with two strings: key, value(with html tags)
 	public void addNewWord(String word, String meaning) {
 		data.put(word, meaning);
-		words.add(word);
+		wordList.add(word);
 	}
 	
 	//Add new word from file dictionary data
@@ -48,9 +48,9 @@ public class Dictionary {
 		int wordEndPos = string.indexOf("</b>");
 		String word = string.substring(3, wordEndPos);
 		String meaning = string.substring(wordEndPos + 4);
-		//Add new word to hash map and array
+		//Add new word to data and 
 		data.put(word, meaning);
-		words.add(word);
+		wordList.add(word);
 	}
 	
 	//Return name of this dictionary
@@ -69,29 +69,31 @@ public class Dictionary {
 	
 	//Return words array in the dictionary
 	public ArrayList<String> getWordList() {
-		return words;
+		return wordList;
 	}
 	
 	//Remove word from the dictionary by key
 	public void remove(String word) {
 		data.remove(word);
-		words.remove(word);
+		wordList.remove(word);
 	}
 	
 	//Remove word from dictionary by key and value
 	public void remove(String word, String meaning) {
 		data.remove(word, meaning);
-		words.remove(word);
+		wordList.remove(word);
 	}
 	
 	//Export data to file
 	//Write all dictionary data to file
 	public void exportData() {
+		update();
+		
 		try {
 			FileOutputStream fos = new FileOutputStream(this.filePath);
 	        OutputStreamWriter writer = new OutputStreamWriter(fos, "utf-8");
 	        
-	        for(String word: words) {
+	        for(String word: wordList) {
 	        	writer.write("<b>" + word + "</b>" + data.get(word) + "\n");
 	        }
 	        
@@ -107,7 +109,7 @@ public class Dictionary {
 	public void importData() {
 		//Clear all old data
 		data.clear();
-		words.clear();
+		wordList.clear();
 		
 		try {
 			FileInputStream fis = new FileInputStream(this.filePath);
@@ -131,7 +133,7 @@ public class Dictionary {
 	//Update word list
 	//Sort ArrayList words alphabetically 
 	public void update() {
-		Collections.sort(words, String.CASE_INSENSITIVE_ORDER);
+		Collections.sort(wordList, String.CASE_INSENSITIVE_ORDER);
 	}
 
 }
