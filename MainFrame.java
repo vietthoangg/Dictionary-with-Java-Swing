@@ -17,12 +17,11 @@ public class MainFrame extends JFrame {
 	private final static String frameName = "VAV Dictionary";
 	
 	private JPanel contentPane;
-
 	private Dictionary evDict, veDict;
 	private JTabbedPane dictionaryPane;
-	private JPanel engVietPanel, vietEngPanel;
+	private DictionaryPanel engVietPanel, vietEngPanel;
 	
-	/**
+	/*
 	 * Launch the application.
 	 */
 	public static void main(String[] args) {
@@ -31,20 +30,28 @@ public class MainFrame extends JFrame {
 				try {
 					MainFrame frame = new MainFrame();
 					frame.setVisible(true);
-					frame.setIconImage(new ImageIcon(".\\src\\icon\\dictionary-icon.png").getImage());
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
 			}
 		});
 	}
+	
+	//Start new frame to update the dictionaries
+	public void restart() {
+		this.dispose(); //Close old frame
+		//New frame
+		MainFrame frame = new MainFrame();
+		frame.setVisible(true);
+	}
 
-	/**
+	/*
 	 * Create the frame.
 	 */
 	public MainFrame() {
 		
 		super(frameName);
+		setIconImage(new ImageIcon(".\\src\\icon\\dictionary-icon.png").getImage());
 		
 		//Import data for dictionaries
 		evDict = new Dictionary("English - Vietnamese Dictionary", ".\\src\\data\\eng_viet.txt");
@@ -68,59 +75,24 @@ public class MainFrame extends JFrame {
 		JMenu fileMenu = new JMenu("   File   ");
 		menuBar.add(fileMenu);
 		
-		JMenuItem importMenuItem = new JMenuItem("Import...");
-		importMenuItem.addActionListener(new ActionListener() {
+		JMenuItem newWindowMenuItem = new JMenuItem("New");
+		fileMenu.add(newWindowMenuItem);
+		newWindowMenuItem.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if(evDict.isModified() || veDict.isModified()) {
-					int importOption = JOptionPane.showConfirmDialog(null, "Dictionaries are modified. This will delete all current data.\nWould you like to continue?", frameName, JOptionPane.YES_NO_CANCEL_OPTION);
-					if(importOption == JOptionPane.NO_OPTION || importOption == JOptionPane.CANCEL_OPTION) {
-						return; //Cancel if user don't want to import
-					}
-				}
-				evDict.importData();
-				veDict.importData();
-				//Reset modify condition
-				evDict.setModify(false);
-				veDict.setModify(false);
-				JOptionPane.showMessageDialog(null, "Import data successfully!", frameName, JOptionPane.INFORMATION_MESSAGE);
+				restart();
 			}
 		});
-		fileMenu.add(importMenuItem);
-		
-		JMenuItem exportMenuItem = new JMenuItem("Export...");
-		exportMenuItem.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				evDict.exportData();
-				veDict.exportData();
-				//Reset modify condition
-				evDict.setModify(false);
-				veDict.setModify(false);
-				JOptionPane.showMessageDialog(null, "Export data successfully!", frameName, JOptionPane.INFORMATION_MESSAGE);
-			}
-		});
-		fileMenu.add(exportMenuItem);
 		
 		JSeparator separator = new JSeparator();
 		separator.setForeground(Color.LIGHT_GRAY);
 		fileMenu.add(separator);
 		
-		JMenuItem exitMenuItem = new JMenuItem("Exit");
+		JMenuItem exitMenuItem = new JMenuItem("Exit                 ");
 		fileMenu.add(exitMenuItem);
 		exitMenuItem.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				//Check if two dictionaries are exported if they are modified
-				if(evDict.isModified() || veDict.isModified()) {
-					int exportOption = JOptionPane.showConfirmDialog(null, "Dictionaries are modified. Do you want to save?", frameName, JOptionPane.YES_NO_CANCEL_OPTION);
-					
-					if(exportOption == JOptionPane.YES_OPTION) {
-						evDict.exportData();
-						veDict.exportData();
-						JOptionPane.showMessageDialog(null, "Export data successfully!", frameName, JOptionPane.INFORMATION_MESSAGE);
-					}
-				}
 				System.exit(0);
 			}
 		});
@@ -131,36 +103,33 @@ public class MainFrame extends JFrame {
 		JMenu addNewWordsMenu = new JMenu("Add new words to   ");
 		editMenu.add(addNewWordsMenu);
 		
-		JMenuItem addEngVietMenu = new JMenuItem("English - Vietnamese Dictionary");
+		JMenuItem addEngVietMenu = new JMenuItem(evDict.getName() + "    ");
 		addEngVietMenu.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				new AddWordFrame(evDict);
-				evDict.setModify(true);
-				
 				
 			}
 		});
 		addNewWordsMenu.add(addEngVietMenu);
 		
-		JMenuItem addVietEngMenu = new JMenuItem("Vietnamese - English Dictionary");
+		JMenuItem addVietEngMenu = new JMenuItem(veDict.getName() + "    ");
 		addNewWordsMenu.add(addVietEngMenu);
 		addVietEngMenu.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
 				new AddWordFrame(veDict);
-				veDict.setModify(true);
 				
 			}
 		});
 		
 		JSeparator separatorEditMenu = new JSeparator();
-		separatorEditMenu.setBackground(Color.LIGHT_GRAY);
+		separatorEditMenu.setForeground(Color.LIGHT_GRAY);
 		editMenu.add(separatorEditMenu);
 		
 		JMenu deleteWordsMenu = new JMenu("Delete words from    ");
 		editMenu.add(deleteWordsMenu);
 		
-		JMenuItem deleteEngVietMenu = new JMenuItem("English - Vietnamese Dictionary");
+		JMenuItem deleteEngVietMenu = new JMenuItem(evDict.getName() + "    ");
 		deleteWordsMenu.add(deleteEngVietMenu);
 		deleteEngVietMenu.addActionListener(new ActionListener() {
 			@Override
@@ -179,12 +148,11 @@ public class MainFrame extends JFrame {
 					 }
 				} while(true);
 				new DeleteWordFrame(evDict, word);
-				evDict.setModify(true);
-				
+						
 			}
 		});
 		
-		JMenuItem deleteVietEngMenu = new JMenuItem("Vietnamese - English Dictionary");
+		JMenuItem deleteVietEngMenu = new JMenuItem(veDict.getName() + "    ");
 		deleteWordsMenu.add(deleteVietEngMenu);
 		deleteVietEngMenu.addActionListener(new ActionListener() {
 			@Override
@@ -203,7 +171,6 @@ public class MainFrame extends JFrame {
 					 }
 				} while(true);
 				new DeleteWordFrame(veDict, word);
-				veDict.setModify(true);
 				
 			}
 		});
@@ -211,7 +178,7 @@ public class MainFrame extends JFrame {
 		JMenu helpMenu = new JMenu("   Help   ");
 		menuBar.add(helpMenu);
 		
-		JMenuItem aboutMenuItem = new JMenuItem("About " + frameName);
+		JMenuItem aboutMenuItem = new JMenuItem("About " + frameName + "    ");
 		helpMenu.add(aboutMenuItem);
 		aboutMenuItem.addActionListener(new ActionListener() {
 			@Override
@@ -227,33 +194,14 @@ public class MainFrame extends JFrame {
 		contentPane.add(dictionaryPane);
 		
 		//Eng - Viet Dictionary panel-------------------------------------
-		engVietPanel = new JPanel();
 		engVietPanel = new DictionaryPanel(evDict);
 		dictionaryPane.addTab("English - Vietnamese", null, engVietPanel, null);
 		
 		//Viet - Eng Dictionary panel-------------------------------------
-		vietEngPanel = new JPanel();
 		vietEngPanel = new DictionaryPanel(veDict);
 		dictionaryPane.addTab("Vietnamese - English", null, vietEngPanel, null);
 		contentPane.setFocusTraversalPolicy(new FocusTraversalOnArray(new Component[]{dictionaryPane}));
-		
-		//Closing Window Listener
-		//Check if two dictionaries are exported if they are modified
-		this.addWindowListener(new WindowAdapter() {
-			@Override
-			public void windowClosing(WindowEvent e) {
-				if(evDict.isModified() || veDict.isModified()) {
-					int exportOption = JOptionPane.showConfirmDialog(null, "Dictionaries are modified. Do you want to save?", frameName, JOptionPane.YES_NO_CANCEL_OPTION);
-					
-					if(exportOption == JOptionPane.YES_OPTION) {
-						evDict.exportData();
-						veDict.exportData();
-						JOptionPane.showMessageDialog(null, "Export data successfully!", frameName, JOptionPane.INFORMATION_MESSAGE);
-					}
-				}
-			}
-		});
-		
+
 	}
 	
 	/*
@@ -263,14 +211,13 @@ public class MainFrame extends JFrame {
 		
 		private static final long serialVersionUID = 1L;
 		
-		private Dictionary dict;
 		private ArrayList<String> wordList;
 		
 		//Create ListModel 
-		private DefaultListModel<String> createListModel() {
+		private DefaultListModel<String> createListModel(Dictionary dictionary) {
 			DefaultListModel<String> model = new DefaultListModel<>();
-			
-			dict.update();
+			dictionary.importData();
+			wordList = dictionary.getWordList();
 			//Add WordMap to model
 			for(String word: wordList) {
 				model.addElement(word);
@@ -297,9 +244,10 @@ public class MainFrame extends JFrame {
 			return end;
 		}
 
-		public DictionaryPanel(Dictionary dict) {	
-			this.dict = dict;
-			this.wordList = dict.getWordList();
+		public DictionaryPanel(Dictionary dictionary) {
+			this.wordList = dictionary.getWordList();
+			
+			this.setLayout(null);
 			
 			//Display meaning of the word
 			JEditorPane meaningEditorPane = new JEditorPane();
@@ -316,13 +264,11 @@ public class MainFrame extends JFrame {
 			this.add(meaningScrollPane);
 			
 			//List of words in Dictionary
-			JList<String> list = new JList<>(createListModel());
+			JList<String> list = new JList<>(createListModel(dictionary));
 			list.setBounds(10, 56, 226, 194);
 			list.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
-			this.setLayout(null);
 			
-			JScrollPane scrollPaneList = new JScrollPane();
-			scrollPaneList.setViewportView(list);
+			JScrollPane scrollPaneList = new JScrollPane(list);
 			scrollPaneList.setSize(190, 324);
 			scrollPaneList.setLocation(10, 52);
 			this.add(scrollPaneList);
@@ -347,11 +293,9 @@ public class MainFrame extends JFrame {
 				public void actionPerformed(ActionEvent e) {
 					String word = textField.getText().trim().toLowerCase();
 					if(meaningEditorPane.getText().contains("Not found!")) {
-						new AddWordFrame(dict, word);
-					} else if(dict.search(textField.getText()) == null){
-						new AddWordFrame(dict, word);
+						new AddWordFrame(dictionary, word);
 					} else {
-						new AddWordFrame(dict);
+						new AddWordFrame(dictionary);
 					}
 				}
 			});
@@ -372,7 +316,7 @@ public class MainFrame extends JFrame {
 					if(list.getSelectedValue() == null) {
 						JOptionPane.showMessageDialog(null, "Please choose a word to modify!", frameName, JOptionPane.ERROR_MESSAGE);
 					} else {
-						new ModifyWordFrame(dict, list.getSelectedValue());
+						new ModifyWordFrame(dictionary, list.getSelectedValue());
 					}
 				}
 			});
@@ -381,10 +325,11 @@ public class MainFrame extends JFrame {
 			JButton deleteWordButton = new JButton("");
 			deleteWordButton.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					if(list.getSelectedValue() == null) {
+					String selectedValue = list.getSelectedValue();
+					if(selectedValue == null) {
 						JOptionPane.showMessageDialog(null, "Please choose a word to delete!", frameName, JOptionPane.ERROR_MESSAGE);
 					} else {
-						new DeleteWordFrame(dict, list.getSelectedValue());
+						new DeleteWordFrame(dictionary, selectedValue);
 					}
 				}
 			});
@@ -399,10 +344,9 @@ public class MainFrame extends JFrame {
 				@Override
 				public void valueChanged(ListSelectionEvent e) {
 					String selectedWord = list.getSelectedValue();
-					
-					String result = dict.search(selectedWord);
+					String result = dictionary.search(selectedWord);
 					if(result != null) {
-						meaningEditorPane.setText("<b>" + selectedWord + "</b><br/>" + dict.search(selectedWord));
+						meaningEditorPane.setText("<b>" + selectedWord + "</b><br/>" + result);
 					} else {
 						meaningEditorPane.setText("<font color=\"red\">Not found!</font>");
 					}
@@ -413,7 +357,7 @@ public class MainFrame extends JFrame {
 				public void actionPerformed(ActionEvent e) {
 					String typingWord = textField.getText().trim().toLowerCase();
 					if(!typingWord.equals("")) {
-						String result = dict.search(typingWord);
+						String result = dictionary.search(typingWord);
 						if(result != null) {
 							list.setSelectedValue(typingWord, true);
 							list.requestFocus();
@@ -431,7 +375,7 @@ public class MainFrame extends JFrame {
 					if(!typingWord.equals("")) { //If textField is available
 						String word = wordList.get( search(typingWord) );
 						if( !wordList.get( search(word) ). equals(typingWord) ) {
-							String meaning = dict.search(typingWord);
+							String meaning = dictionary.search(typingWord);
 							if(meaning != null) {
 								meaningEditorPane.setText("<b>" + typingWord + "</b><br/>" + meaning);
 								return;
@@ -444,40 +388,11 @@ public class MainFrame extends JFrame {
 				}
 			});
 			
-			/*
-			 * 
-			wordList.addMouseListener(new MouseAdapter() {		
-				private String selectedWord;
-				
-				@Override
-				public void mouseClicked(MouseEvent e) {
-					selectedWord = wordList.getSelectedValue();
-					
-					String result = dict.search(selectedWord);
-					if(result != null) {
-						meaningEditorPane.setText("<b>" + selectedWord + "</b><br/>" + dict.search(selectedWord));
-					} else {
-						meaningEditorPane.setText("<font color=\"red\">Not found!</font>");
-					}
-					SwingUtilities.invokeLater(setTextField);	
-				}
-			
-				//Fix bug: IllegalStateException when setText for TextField
-				private Runnable setTextField = new Runnable() {
-					@Override
-					public void run() {
-						textField.setText(selectedWord);
-					}
-				};
-			});
-			*/
-			
 		}
 		
 	}
 
 	/*
-	 * 
 	 * Add new word to the Dictionary
 	 */
 	private class AddWordFrame extends JFrame {
@@ -487,21 +402,21 @@ public class MainFrame extends JFrame {
 		private JPanel contentPane;
 		private Font font = new Font("Tahoma", Font.PLAIN, 14);
 		
-		private Dictionary dict;
+		private Dictionary dictionary;
 		private String word;
 		private StringBuilder meaningBuilder = new StringBuilder();
 		
-		public AddWordFrame(Dictionary dict,  String word) {
+		public AddWordFrame(Dictionary dictionary,  String word) {
 			super(frameName);
-			this.dict = dict;
+			this.dictionary = dictionary;
 			this.word = word;
 			
 			newFrame();
 		}
 		
-		public AddWordFrame(Dictionary dict) {
+		public AddWordFrame(Dictionary dictionary) {
 			super(frameName);
-			this.dict = dict;
+			this.dictionary = dictionary;
 			newFrame();
 		}
 		
@@ -518,7 +433,7 @@ public class MainFrame extends JFrame {
 	        Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
 	        this.setLocation(dim.width / 2 - this.getSize().width / 2, dim.height / 2 - this.getSize().height / 2);
 			
-			JLabel mainLabel = new JLabel("Add new word to " + dict.getName());
+			JLabel mainLabel = new JLabel("Add new word to " + dictionary.getName());
 			mainLabel.setHorizontalAlignment(SwingConstants.CENTER);
 			mainLabel.setFont(new Font("Tahoma", Font.PLAIN, 16));
 			mainLabel.setBounds(10, 11, 414, 30);
@@ -619,7 +534,7 @@ public class MainFrame extends JFrame {
 					//Pronunciation field
 					String pron = pronunciationField.getText().trim();
 					if(!pron.equals("")) {
-						meaningBuilder.append(pron + "<br/>");
+						meaningBuilder.append("/" + pron + "/<br/>");
 					}
 					//Word category field
 					String category = categoryField.getText().trim();
@@ -632,7 +547,7 @@ public class MainFrame extends JFrame {
 						return;
 					} 
 					//Ask to continue to ask if the word has already existed
-					if(dict.search(word) != null) {
+					if(dictionary.search(word) != null) {
 						int replaceOption = JOptionPane.showConfirmDialog(null, "This word has already existed. Do you want to replace it?");
 						if(replaceOption == JOptionPane.NO_OPTION || replaceOption == JOptionPane.CANCEL_OPTION) {
 							return;
@@ -642,25 +557,25 @@ public class MainFrame extends JFrame {
 					//Add examples(not necessary)
 					String example = exampleField.getText().trim();
 					if(!example.equals("")) {
-						meaningBuilder.append("&#8901<b>" + example + "</b><br/>");
+						meaningBuilder.append("&#8901<b>" + example + "</b>");
 						
 						String explainExp = explainExpField.getText().trim();
 						if(!explainExp.equals("")) {
 							meaningBuilder.append(": " + explainExp + "<br/>");
+						} else {
+							meaningBuilder.append("<br/>");
 						}
 					}					
 					//Add new word to this dictionary
-					dict.addNewWord(word, meaningBuilder.toString());
-					dict.setModify(true);
+					dictionary.addNewWord(word, meaningBuilder.toString());
 					meaningBuilder.delete(0, meaningBuilder.length()); //Clear string builder
-					JOptionPane.showMessageDialog(null, "Add new word successfully to " + dict.getName(), frameName, JOptionPane.INFORMATION_MESSAGE);
-					//Clear all test fields after add new word successfully
-					wordField.setText("");
-					pronunciationField.setText("");
-					categoryField.setText("");
-					definitionField.setText("");
-					exampleField.setText("");
-					explainExpField.setText("");
+					JOptionPane.showMessageDialog(null, "Add new word successfully to " + dictionary.getName(), frameName, JOptionPane.INFORMATION_MESSAGE);			
+					
+					//Close the frame
+					dispose();
+					//Update list
+					dictionary.exportData();
+					restart();
 				}
 			});	
 		}
@@ -678,7 +593,7 @@ public class MainFrame extends JFrame {
 		
 		private JPanel contentPane;
 		
-		public DeleteWordFrame(Dictionary dict, String word) {
+		public DeleteWordFrame(Dictionary dictionary, String word) {
 			super(frameName);
 			
 			setBounds(100, 100, 375, 360);
@@ -692,7 +607,7 @@ public class MainFrame extends JFrame {
 	        Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
 	        this.setLocation(dim.width / 2 - this.getSize().width / 2, dim.height / 2 - this.getSize().height / 2);
 			
-			JLabel mainLabel = new JLabel("Delete this word from " + dict.getName());
+			JLabel mainLabel = new JLabel("Delete this word from " + dictionary.getName());
 			mainLabel.setHorizontalAlignment(JLabel.CENTER);
 			mainLabel.setFont(new Font("Tahoma", Font.PLAIN, 14));
 			mainLabel.setBounds(10, 11, 339, 37);
@@ -705,7 +620,7 @@ public class MainFrame extends JFrame {
 			//Keep scroll on top
 			DefaultCaret caret = (DefaultCaret) editorPane.getCaret();
 			caret.setUpdatePolicy(DefaultCaret.NEVER_UPDATE);
-			editorPane.setText("<b>" + word + "</b><br/>" + dict.search(word));
+			editorPane.setText("<b>" + word + "</b><br/>" + dictionary.search(word));
 			contentPane.add(editorPane);
 			
 			JScrollPane scrollPane = new JScrollPane(editorPane);
@@ -730,12 +645,15 @@ public class MainFrame extends JFrame {
 				public void actionPerformed(ActionEvent e) {
 					int deleteOption = JOptionPane.showConfirmDialog(null, "Do you really want to delete this word?");
 					if(deleteOption == JOptionPane.YES_OPTION) {
-						dict.remove(word);
-						dict.setModify(true);
-						JOptionPane.showMessageDialog(null, "Delete this word successfully from " + dict.getName(), frameName, JOptionPane.INFORMATION_MESSAGE);
+						dictionary.remove(word);
+						
+						JOptionPane.showMessageDialog(null, "Delete this word successfully from " + dictionary.getName(), frameName, JOptionPane.INFORMATION_MESSAGE);
 					}
-					//Cancel this frame
+					//Close the frame
 					dispose();
+					//Update list
+					dictionary.exportData();
+					restart();
 				}
 			});
 		}
@@ -752,7 +670,7 @@ public class MainFrame extends JFrame {
 		
 		private JPanel contentPane;
 		
-		public ModifyWordFrame(Dictionary dict, String word) {
+		public ModifyWordFrame(Dictionary dictionary, String word) {
 			super(frameName);
 			
 			setBounds(100, 100, 375, 360);
@@ -766,7 +684,7 @@ public class MainFrame extends JFrame {
 	        Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
 	        this.setLocation(dim.width / 2 - this.getSize().width / 2, dim.height / 2 - this.getSize().height / 2);
 			
-			JLabel mainLabel = new JLabel("Modify this word in " + dict.getName());
+			JLabel mainLabel = new JLabel("Modify this word in " + dictionary.getName());
 			mainLabel.setHorizontalAlignment(JLabel.CENTER);
 			mainLabel.setFont(new Font("Tahoma", Font.PLAIN, 14));
 			mainLabel.setBounds(10, 11, 339, 37);
@@ -776,7 +694,7 @@ public class MainFrame extends JFrame {
 			editorPane.setBounds(0, 0, 106, 20);
 			editorPane.setContentType("text/html");
 			editorPane.setEditable(true);
-			editorPane.setText("<b>" + word + "</b><br/>" + dict.search(word));
+			editorPane.setText("<b>" + word + "</b><br/>" + dictionary.search(word));
 			contentPane.add(editorPane);
 			
 			JScrollPane scrollPane = new JScrollPane(editorPane);
@@ -806,20 +724,19 @@ public class MainFrame extends JFrame {
 						String editor = Convert.toUnicode(editorPane);
 						String userWord = editor.substring(editor.indexOf("<b>"));
 						//Modify dictionary
-						dict.remove(word);
-						dict.addWord(userWord);
-		
-						dict.setModify(true);
-						
-						JOptionPane.showMessageDialog(null, "Modify word successfully in " + dict.getName(), frameName, JOptionPane.INFORMATION_MESSAGE);
-						//Cancel this frame
+						dictionary.remove(word);
+						dictionary.addWord(userWord);
+						JOptionPane.showMessageDialog(null, "Modify word successfully in " + dictionary.getName(), frameName, JOptionPane.INFORMATION_MESSAGE);
+						//Close the frame
 						dispose();
+						//Update list
+						dictionary.exportData();
+						restart();
 					} else if(modifyOption == JOptionPane.NO_OPTION) {
 						//Cancel this frame
 						dispose();
 					}	
 				}
-				
 				
 			});
 		}

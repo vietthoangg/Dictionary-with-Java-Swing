@@ -15,7 +15,6 @@ public class Dictionary {
 	private String filePath;                                //File path of dictionary data
 	private HashMap<String, String> data = new HashMap<>(); //Store dictionary data
 	private ArrayList<String> wordList = new ArrayList<>(); //Store words to search
-	private boolean isModified = false;                     //Check if the dictionary is modified
 	
 	public Dictionary() {}
 	
@@ -56,12 +55,6 @@ public class Dictionary {
 	//Return name of this dictionary
 	public String getName() { return name; }
 	
-	//Set modify condition
-	public void setModify(boolean isModified) {
-		this.isModified = isModified;
-	}
-	public boolean isModified() { return isModified; }
-	
 	//Search the meaning of the word in the dictionary
 	public String search(String string) {
 		return data.get(string);
@@ -87,7 +80,9 @@ public class Dictionary {
 	//Export data to file
 	//Write all dictionary data to file
 	public void exportData() {
-		update();
+		//Update word list
+		//Sort ArrayList words alphabetically before export
+		Collections.sort(wordList, String.CASE_INSENSITIVE_ORDER);
 		
 		try {
 			FileOutputStream fos = new FileOutputStream(this.filePath);
@@ -96,7 +91,6 @@ public class Dictionary {
 	        for(String word: wordList) {
 	        	writer.write("<b>" + word + "</b>" + data.get(word) + "\n");
 	        }
-	        
 	        writer.close();
 		} catch(FileNotFoundException e) {
 			//
@@ -130,10 +124,6 @@ public class Dictionary {
 		}
 	}
 	
-	//Update word list
-	//Sort ArrayList words alphabetically 
-	public void update() {
-		Collections.sort(wordList, String.CASE_INSENSITIVE_ORDER);
-	}
+	
 
 }
